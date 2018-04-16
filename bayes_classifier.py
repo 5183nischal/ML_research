@@ -15,21 +15,25 @@ import sklearn.svm
 ## const
 PKL_PATH = "consPapersNew.pkl"
 PKL_PATH1 = "deonPapersNew.pkl"
+PKL_PATH2 = "JSTORconsPapers.pkl"
+PKL_PATH3 = "JSTORdeonPapers.pkl"
 LEMMA_FILTER = ['NOUN', 'PROPN', 'VERB', 'ADJ', 'NUM'] # keep 'NUM' as the last, function lemma_dep_list() refers to this
 
 
 
-def loadDataset(pklPath=PKL_PATH):
+def loadDataset(pklPath):
     with open(pklPath, "rb") as pklFile:
         return np.array(pickle.load(pklFile, encoding="utf-8"))
 
-def loadDataset1(pklPath=PKL_PATH1):
-    with open(pklPath, "rb") as pklFile:
-        return np.array(pickle.load(pklFile, encoding="utf-8"))
 
-c_data_set = loadDataset()
-d_data_set = loadDataset1()
+c_data_phil = loadDataset(PKL_PATH)
+d_data_phil = loadDataset(PKL_PATH1)
+jstor_c = loadDataset(PKL_PATH2)
+jstor_d = loadDataset(PKL_PATH3)
 
+
+c_data_set = c_data_phil.tolist() #+ jstor_c.tolist()
+d_data_set = d_data_phil.tolist() #+ jstor_d.tolist()
 #splitting to pieces:
 c_list = ""
 for i in c_data_set:
@@ -60,13 +64,28 @@ for j in range(len(d_list)):
 d_data.append(temp)
 
 final_data_set = c_data + d_data
+tarining_length = len(final_data_set)
 
+
+'''
+#adding jstor prediction data
+for i in jstor_c:
+    final_data_set.append(i)
+
+for i in jstor_d:
+    final_data_set.append(i)
+'''
+
+
+
+
+#adding Jstor file
 
 
 #implementing n-gram
 
 #bigram_vectorizer = CountVectorizer(ngram_range=(1, 3),token_pattern=r'\b\w+\b', min_df=1)
-bigram_vectorizer = TfidfVectorizer(ngram_range=(1, 3))
+bigram_vectorizer = TfidfVectorizer(ngram_range=(1, 3), max_df = 4)
 analyze = bigram_vectorizer.build_analyzer()
 #print(analyze(c_data_set[0]))
 X = bigram_vectorizer.fit_transform(final_data_set).toarray()
@@ -78,6 +97,25 @@ for i in d_data:
     y.append('deon')
 
 
+'''
+#seperating training a prediction:
+X = []
+print(len(X_ngram), tarining_length)
+for i in range(tarining_length):
+    X.append(X_ngram.pop(0))    
+
+
+
+#j stro data:
+jstor_status = []
+for i in jstor_c:
+    jstor_status.append('cons')
+for i in jstor_d:
+    jstor_status.append('deon')
+'''
+
+print('featurization complete')
+#
 
 
 
@@ -88,6 +126,7 @@ for i in d_data:
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 100)
 
+print("Naive bayes")
 
 clf = MultinomialNB().fit(X_train, y_train)
 predicted = clf.predict(X_test)
