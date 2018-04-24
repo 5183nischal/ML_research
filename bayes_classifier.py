@@ -83,9 +83,10 @@ for i in jstor_d:
 
 
 #implementing n-gram
+stop_words = ["xe2", "xe", "fetus", "sv", "ac", "sydney", "x80", "user", "abortion", "nora", "jones", "s", "pbc", "0812", "0812 by", "xa0, xao", "xa0", "she", "i"]
 
 #bigram_vectorizer = CountVectorizer(ngram_range=(1, 3),token_pattern=r'\b\w+\b', min_df=1)
-bigram_vectorizer = TfidfVectorizer(ngram_range=(1, 3), max_df = 4)
+bigram_vectorizer = TfidfVectorizer(ngram_range=(1, 3), token_pattern=r'\b\w+\b', min_df=1, stop_words = stop_words)
 analyze = bigram_vectorizer.build_analyzer()
 #print(analyze(c_data_set[0]))
 X = bigram_vectorizer.fit_transform(final_data_set).toarray()
@@ -126,6 +127,8 @@ print('featurization complete')
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 100)
 
+
+'''
 print("Naive bayes")
 
 clf = MultinomialNB().fit(X_train, y_train)
@@ -147,12 +150,13 @@ predictors = []
 for i in range(top):
     val = min(coef)
     index = coef.index(val)
-    predictors.append([n_grams[index], val])
+    predictors.append([n_grams.pop(index), val])
     coef.pop(index)
 
 for i in predictors:
     print (i ,"\n")
 
+'''
 
 
 
@@ -160,9 +164,10 @@ for i in predictors:
 
 print("SVM with Vector Featues")
 
-clf = sklearn.svm.LinearSVC().fit(X_train, y_train)
+clf = sklearn.svm.LinearSVC(penalty='l2').fit(X_train, y_train)
 predicted = clf.predict(X_test)
 coef = clf.coef_[0].tolist()
+
 
 n = 0
 correct = 0
@@ -174,15 +179,33 @@ for i, j in zip(y_test, predicted):
 print(correct*100/n)
 
 top = 100
-predictors = []
+pos_predictors = []
+neg_predictors = []
+
 for i in range(top):
     val = max(coef)
     index = coef.index(val)
-    predictors.append([n_grams[index], val])
+    pos_predictors.append([n_grams.pop(index), val])
     coef.pop(index)
 
-for i in predictors:
+
+for i in range(top):
+    val = min(coef)
+    index = coef.index(val)
+    neg_predictors.append([n_grams.pop(index), val])
+    coef.pop(index)
+
+
+print("positive coef")
+for i in pos_predictors:
     print (i ,"\n")
+
+print("negative coef")
+for i in neg_predictors:
+    print (i ,"\n")
+
+
+
 
 
 
